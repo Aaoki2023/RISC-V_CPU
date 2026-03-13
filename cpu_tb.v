@@ -14,11 +14,9 @@ module cpu_tb;
     // Expected register values after execution
     reg [31:0] expected_regs [0:31];
     
-    // Test tracking
     integer i;
     integer errors;
     
-    // Instantiate the CPU
     main cpu (
         .clk(clk),
         .rst(rst),
@@ -27,20 +25,15 @@ module cpu_tb;
         .alu_res(alu_result)
     );
     
-    // Clock generation - 10ns period (100MHz)
     initial begin
         clk = 0;
         forever #41.67 clk = ~clk;
     end
-    
-    // test procedure
     initial begin
         
-        // Initialize expected values
         // x0 is always 0
         expected_regs[0] = 32'd0;
         
-        // Based on the program in instruction_memory.v:
         expected_regs[1]  = 32'd30;           // addi x1, x0, 10
         expected_regs[2]  = 32'd20;           // addi x2, x0, 20
         expected_regs[3]  = 32'd30;           // add x3, x1, x2 (10+20)
@@ -66,12 +59,12 @@ module cpu_tb;
         expected_regs[23] = 32'd22;           // Loaded from mem[4]
         expected_regs[24] = 32'd33;           // Loaded from mem[8]
 
-        // Registers 25-31 should remain 0
+        // Registers 25-31
         for (i = 25; i < 32; i = i + 1) begin
             expected_regs[i] = 32'd0;
         end
         
-        // Reset the CPU
+        // reset the CPU
         rst = 1;
         $display("Resetting CPU");
         #15;
@@ -79,11 +72,6 @@ module cpu_tb;
         #5;
         $display("Reset complete \n");
         
-        // Run for 20 clock cycles
-        // repeat(35) begin
-        //     @(posedge clk);
-        //     #1;  // Small delay after clock edge for signals to settle
-        // end
         $display("Executing instructions...\\n");
         $display("Cycle | PC  | Instruction | ALU Result");
         $display("------|-----|-------------|------------");
@@ -114,7 +102,7 @@ module cpu_tb;
             end
         end
 
-        // Check load/store registers (x17-x24)
+        // Check x17-x24
         for (i = 17; i <= 24; i = i + 1) begin
             if (cpu.REGFILE.registers[i] !== expected_regs[i]) begin
                 $display("ERROR: x%0d = %d (0x%h), Expected: %d (0x%h)", 
@@ -131,10 +119,6 @@ module cpu_tb;
                          cpu.REGFILE.registers[i]);
             end
         end
-
-        // if (cpu.DATAPATH.DMEM.mem[0] !== 32'd11) errors = errors + 1;
-        // if (cpu.DATAPATH.DMEM.mem[1] !== 32'd22) errors = errors + 1;
-        // if (cpu.DATAPATH.DMEM.mem[2] !== 32'd33) errors = errors + 1;
         
         if (errors == 0) begin
             $display("\nLoad/Store tests PASSED\n");
@@ -142,7 +126,6 @@ module cpu_tb;
             $display("\nLoad/Store tests FAILED: %0d errors\n", errors);
         end
         
-        // Summary
         $display("  Test Summary");
         $display("Total Registers Checked: 32");
         $display("Errors Found: %0d", errors);
@@ -172,7 +155,7 @@ module cpu_tb;
         
         // Check final PC value
         $display("\nFinal PC: %d (0x%h)", pc, pc);
-        if (pc == 32'd108) begin  // PC should be 64
+        if (pc == 32'd108) begin  
             $display("PC works");
         end else begin
             $display("Expected PC=64, got PC=%d", pc);
