@@ -16,7 +16,13 @@ module instr_decode(
     output reg mem_to_reg,
 
     output reg [1:0] mem_size,     // 00=byte, 01=half, 10=word
-    output reg mem_unsigned        // 1=unsigned load, 0=signed load
+    output reg mem_unsigned,        // 1=unsigned load, 0=signed load
+
+    output reg branch,
+    output reg jump,
+    output reg jalr,
+    output reg auipc,
+    output reg [2:0] branch_type // BEQ=000, BNE=001, BLT=100, BGE=101, BLTU=110, BGEU=111
 );
 
     /*
@@ -61,6 +67,11 @@ module instr_decode(
     localparam I_TYPE = 7'b0010011;
     localparam OP_LUI = 7'b0110111; // load upper imm so that way you can have a 32 bit immediate
 
+    localparam BRANCH = 7'b1100011;
+    localparam JAL    = 7'b1101111;  
+    localparam JALR   = 7'b1100111;  
+    localparam OP_AUIPC  = 7'b0010111; 
+
     localparam LOAD = 7'b0000011;
     localparam STORE = 7'b0100011;
 
@@ -77,7 +88,12 @@ module instr_decode(
         mem_write = 0;
         mem_to_reg = 0;
         mem_size = MEM_WORD;
-        mem_unsigned = 0;  
+        mem_unsigned = 0;
+        branch = 0;
+        jump = 0;
+        jalr = 0;
+        auipc = 0;
+        branch_type = 3'b000;
 
         case (opcode)
 
@@ -103,9 +119,9 @@ module instr_decode(
                     3'b001: alu_control = SHL;
                     3'b101: begin
                         if (funct7 == 7'b0000000)
-                            alu_control = SHR;  // SRL
+                            alu_control = SHR;  
                         else if (funct7 == 7'b0100000)
-                            alu_control = SRA;  // you need a new ALU op
+                            alu_control = SRA;  
                     end
                     default: alu_control = ADD;
 
@@ -210,6 +226,42 @@ module instr_decode(
                 reg_write = 1;
                 alu_src = 1;
                 alu_control = PASS_B;
+                imm = {instr[31:12], 12'b0};
+            end
+
+            BRANCH: begin
+                reg_write = 0;
+                alu_src = 0;          // Compare rs1 and rs2
+                alu_control = SUB;    // Subtraction for comparison
+                branch = 1;
+                branch_type = funct3;
+                // B-type immediate: {imm[12], imm[10:5], imm[4:1], imm[11]}
+                imm = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
+            end
+ 
+            JAL: begin
+                reg_write = 1;        // Write PC+4 to rd
+                jump = 1;
+                alu_src = 1;
+                alu_control = ADD;
+                // J-type immediate: {imm[20], imm[10:1], imm[11], imm[19:12]}
+                imm = {{11{instr[31]}}, instr[31], instr[19:12], instr[20], instr[30:21], 1'b0};
+            end
+ 
+            JALR: begin
+                reg_write = 1;        // Write PC+4 to rd
+                jump = 1;
+                jalr = 1;
+                alu_src = 1;
+                alu_control = ADD;
+                imm = {{20{instr[31]}}, instr[31:20]};
+            end
+
+            OP_AUIPC: begin
+                reg_write = 1;
+                alu_src = 1;
+                alu_control = ADD;
+                auipc = 1;
                 imm = {instr[31:12], 12'b0};
             end
 

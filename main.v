@@ -11,10 +11,9 @@ module main(
     wire [31:0] pc_next;
     wire [31:0] pc_plus_4;
     assign pc_out = pc;
-
-    // wire [31:0] instr;
-
-    // assign instr_out = instr;
+    wire [31:0] branch_target;
+    wire [31:0] jump_target;
+    wire pc_src; 
 
     wire [4:0] rs1, rs2, rd;
     wire [31:0] imm;
@@ -27,19 +26,155 @@ module main(
     wire [1:0] mem_size;
     wire mem_unsigned;
 
-    // wire [31:0] alu_res;
+    wire branch;              // branch instr flag
+    wire jump;                // jump instr flag
+    wire jalr;                // JALR flag
+    wire auipc;               // AUIPC flag
+    wire [2:0] branch_type;   // BEQ, BNE, BLT, BGE, BLTU, BGEU
+
     wire alu_zero, alu_carry, alu_overflow, alu_sign;
     wire [31:0] data1;
     wire [31:0] data2;
     wire [31:0] alu_input2; // either an immediate or reg value 
+    wire [31:0] alu_input1;
 
     wire less_than_flag;
     wire equal_flag;
     wire greater_than_flag;
     wire [31:0] mem_data;
     wire [31:0] write_back_data;
+    wire [31:0] final_write_data;
     
+    wire branch_taken;
+    wire [31:0] pc_plus_imm;
 
+    // IF / ID
+    reg [31:0] IF_ID_pc;
+    reg [31:0] IF_ID_instr;
+    reg [31:0] IF_ID_pc_plus_4;
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            IF_ID_pc <= 0;
+            IF_ID_instr <= 0;
+            IF_ID_pc_plus_4 <= 0;
+        end else begin
+            IF_ID_pc <= pc;
+            IF_ID_instr <= instr;
+            IF_ID_pc_plus_4 <= pc_plus_4;
+        end
+    end
+
+    // ID / EX
+    reg [31:0] ID_EX_data1;
+    reg [31:0] ID_EX_data2;
+    reg [31:0] ID_EX_imm;
+    reg [4:0] ID_EX_rd;
+    reg [3:0] ID_EX_alu_control;
+    reg ID_EX_alu_src;
+    reg ID_EX_reg_write;
+    reg ID_EX_auipc;
+    reg [31:0] ID_EX_pc;
+    reg [31:0] ID_EX_pc_plus_4;
+    reg ID_EX_jump;
+    reg ID_EX_branch;
+    reg [2:0] ID_EX_branch_type;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            ID_EX_data1 <= 0;
+            ID_EX_data2 <= 0;
+            ID_EX_imm <= 0;
+            ID_EX_rd <= 0;
+            ID_EX_alu_control <= 0;
+            ID_EX_alu_src <= 0;
+            ID_EX_reg_write <= 0;
+            ID_EX_auipc <= 0;
+            ID_EX_pc <= 0;
+            ID_EX_pc_plus_4 <= 0;
+            ID_EX_jump <= 0;
+            ID_EX_branch <= 0;
+            ID_EX_branch_type <= 0;
+        end else begin
+            ID_EX_data1 <= data1;
+            ID_EX_data2 <= data2;
+            ID_EX_imm <= imm;
+            ID_EX_rd <= rd;
+            ID_EX_alu_control <= alu_control;
+            ID_EX_alu_src <= alu_src;
+            ID_EX_reg_write <= reg_write;
+            ID_EX_auipc <= auipc;
+            ID_EX_pc <= IF_ID_pc;
+            ID_EX_pc_plus_4 <= IF_ID_pc_plus_4;
+            ID_EX_jump <= jump;
+            ID_EX_branch <= branch;
+            ID_EX_branch_type <= branch_type;
+        end
+    end
+
+    // EX / MEM
+    reg [31:0] EX_MEM_alu_res;
+    reg [31:0] EX_MEM_data2;
+    reg [4:0] EX_MEM_rd;
+    reg EX_MEM_reg_write;
+    reg EX_MEM_mem_to_reg;
+    reg EX_MEM_mem_read;
+    reg EX_MEM_mem_write;
+    reg [31:0] EX_MEM_pc_plus_4;
+    reg EX_MEM_jump;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            EX_MEM_alu_res <= 0;
+            EX_MEM_data2 <= 0;
+            EX_MEM_rd <= 0;
+            EX_MEM_reg_write <= 0;
+            EX_MEM_mem_to_reg <= 0;
+            EX_MEM_mem_read <= 0;
+            EX_MEM_mem_write <= 0;
+            EX_MEM_pc_plus_4 <= 0;
+            EX_MEM_jump <= 0;
+        end else begin
+            EX_MEM_alu_res <= alu_res;
+            EX_MEM_data2 <= ID_EX_data2;
+            EX_MEM_rd <= ID_EX_rd;
+            EX_MEM_reg_write <= ID_EX_reg_write;
+            EX_MEM_mem_to_reg <= mem_to_reg;
+            EX_MEM_mem_read <= mem_read;
+            EX_MEM_mem_write <= mem_write;
+            EX_MEM_pc_plus_4 <= ID_EX_pc_plus_4;
+            EX_MEM_jump <= ID_EX_jump;
+        end
+    end
+
+    // MEM / WB
+    reg [31:0] MEM_WB_mem_data;
+    reg [31:0] MEM_WB_alu_res;
+    reg [4:0] MEM_WB_rd;
+    reg MEM_WB_reg_write;
+    reg MEM_WB_mem_to_reg;
+    reg [31:0] MEM_WB_pc_plus_4;
+    reg MEM_WB_jump;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            MEM_WB_mem_data <= 0;
+            MEM_WB_alu_res <= 0;
+            MEM_WB_rd <= 0;
+            MEM_WB_reg_write <= 0;
+            MEM_WB_mem_to_reg <= 0;
+            MEM_WB_pc_plus_4 <= 0;
+            MEM_WB_jump <= 0;
+        end else begin
+            MEM_WB_mem_data <= mem_data;
+            MEM_WB_alu_res <= EX_MEM_alu_res;
+            MEM_WB_rd <= EX_MEM_rd;
+            MEM_WB_reg_write <= EX_MEM_reg_write;
+            MEM_WB_mem_to_reg <= EX_MEM_mem_to_reg;
+            MEM_WB_pc_plus_4 <= EX_MEM_pc_plus_4;
+            MEM_WB_jump <= EX_MEM_jump;
+        end
+    end
+    
     program_counter PC (
         .clk(clk),
         .rst(rst),
@@ -47,9 +182,53 @@ module main(
         .curr(pc)
     );
 
-    // next seq instr, use the temp pc_plus_4 to save time down the line for log jumps
-    assign pc_plus_4 = pc+4;
-    assign pc_next = pc_plus_4;
+    // PC + 4 
+    assign pc_plus_4 = pc + 4;
+    
+    // PC + immediate
+    //assign pc_plus_imm = pc + imm;
+    
+    // branch target = pc_plus_imm
+    //assign branch_target = pc_plus_imm;
+    assign branch_target = EX_pc_plus_imm;
+    
+    // JAL: PC + immediate
+    // JALR: (rs1 + immediate) & ~1 
+    //assign jump_target = jalr ? ((data1 + imm) & 32'hFFFFFFFE) : pc_plus_imm;
+    wire [31:0] EX_pc_plus_imm;
+    assign EX_pc_plus_imm = ID_EX_pc + ID_EX_imm;
+
+    wire [31:0] EX_jump_target;
+    assign EX_jump_target =
+        ID_EX_jalr ? ((ID_EX_data1 + ID_EX_imm) & 32'hFFFFFFFE)
+                : EX_pc_plus_imm;
+    
+    // Branch decision logic
+    // assign branch_taken = branch && (
+    //     (branch_type == 3'b000 && equal_flag) ||           // BEQ
+    //     (branch_type == 3'b001 && !equal_flag) ||          // BNE
+    //     (branch_type == 3'b100 && less_than_flag) ||       // BLT - signed
+    //     (branch_type == 3'b101 && !less_than_flag) ||      // BGE - signed
+    //     (branch_type == 3'b110 && less_than_flag) ||       // BLTU - unsigned
+    //     (branch_type == 3'b111 && !less_than_flag)         // BGEU - unsigned
+    // );
+    wire EX_branch_taken;
+
+    assign EX_branch_taken = ID_EX_branch && (
+        (ID_EX_branch_type == 3'b000 && equal_flag) ||
+        (ID_EX_branch_type == 3'b001 && !equal_flag) ||
+        (ID_EX_branch_type == 3'b100 && less_than_flag) ||
+        (ID_EX_branch_type == 3'b101 && !less_than_flag) ||
+        (ID_EX_branch_type == 3'b110 && less_than_flag) ||
+        (ID_EX_branch_type == 3'b111 && !less_than_flag)
+    );
+    
+    
+    // Next PC mux
+    assign pc_src = EX_branch_taken || ID_EX_jump;
+    // assign pc_next = pc_src ? (jump ? jump_target : branch_target) : pc_plus_4;
+    assign pc_next = pc_src ? EX_pc_plus_imm : 
+        ID_EX_jump ? EX_jump_target : pc_plus_4;
 
     instr_memory IMEM (
         .pc(pc),
@@ -60,7 +239,7 @@ module main(
     );
 
     instr_decode DECODE (
-        .instr(instr),
+        .instr(IF_ID_instr),
         .rs1(rs1),
         .rs2(rs2),
         .rd(rd),
@@ -72,28 +251,13 @@ module main(
         .mem_write(mem_write),
         .mem_to_reg(mem_to_reg),
         .mem_size(mem_size),
-        .mem_unsigned(mem_unsigned)
+        .mem_unsigned(mem_unsigned),
+        .jump(jump),
+        .branch(branch),
+        .jalr(jalr),
+        .auipc(auipc),
+        .branch_type(branch_type)
     );
-
-    // reg_alu_path DATAPATH (
-    //     .clk(clk),
-    //     .rst(rst),
-    //     .source_1(rs1),
-    //     .source_2(rs2),
-    //     .out_addr(rd),
-    //     .immediate(imm),
-    //     .write_enable(reg_write),
-    //     .imm_sel(alu_src),
-    //     .alu_op(alu_control),
-    //     .mem_read(mem_read),
-    //     .mem_write(mem_write),
-    //     .mem_to_reg(mem_to_reg),
-    //     .alu_res(alu_res),
-    //     .alu_zero(alu_zero),
-    //     .alu_carry(alu_carry),
-    //     .alu_overflow(alu_overflow),
-    //     .alu_sign(alu_sign)
-    // );
 
     register_file REGFILE (
         .clk(clk),
@@ -102,15 +266,17 @@ module main(
         .r_addr2(rs2),
         .r_data1(data1),
         .r_data2(data2),
-        .w_enable(reg_write),
-        .w_addr(rd),
-        .w_data(write_back_data)
+        .w_enable(MEM_WB_reg_write),
+        .w_addr(MEM_WB_rd),
+        .w_data(final_write_data)
     );
 
-    assign alu_input2 = alu_src ? imm : data2;
+    assign alu_input2 = ID_EX_alu_src ? ID_EX_imm : ID_EX_data2;
+    assign alu_input1 = ID_EX_auipc ? ID_EX_pc : ID_EX_data1;
 
     alu A (
-        .in1(data1),
+        //.in1(auipc ? pc : data1),
+        .in1(alu_input1),
         .in2(alu_input2),
         .control(alu_control),
         .res(alu_res),
@@ -125,8 +291,8 @@ module main(
 
     data_mem DMEM (
         .clk(clk),
-        .addr(alu_res),
-        .write_data(data2),
+        .addr(EX_MEM_alu_res),
+        .write_data(EX_MEM_data2),
         .mem_read(mem_read),
         .mem_write(mem_write),
         .mem_size(mem_size),
@@ -134,6 +300,9 @@ module main(
         .read_data(mem_data)
     );
 
-    assign write_back_data = mem_to_reg ? mem_data : alu_res;
+    // assign write_back_data = mem_to_reg ? mem_data : alu_res;
+    assign write_back_data = MEM_WB_mem_to_reg ? MEM_WB_mem_data : MEM_WB_alu_res;
+    // assign final_write_data = jump ? pc_plus_4 : write_back_data;
+    assign final_write_data = MEM_WB_jump ? MEM_WB_pc_plus_4 : write_back_data;;
 
 endmodule

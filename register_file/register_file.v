@@ -11,8 +11,10 @@ module register_file (
     output wire [31:0] r_data2
 );
 
-    reg [31:0] registers [31:0];
-
+    reg [31:0] registers [31:0]; // make sure the register file is running fast enough to fit within the clock cycle along with load/stores and alu
+                                 // figure out how to tell if something is going wrong in hardware so that you can start actually testing with the upduino
+                                 // try to get jumps and branches done
+                                 // look into pipelining try to get up to Part 3 done
     integer i;
 
     // initalize registers
@@ -28,11 +30,17 @@ module register_file (
         // can also write on negative clock edge
         else begin
             if (w_enable && w_addr != 5'b00000) begin
+                $display("w_addr=%d w_data=%d", w_addr, w_data);
                 registers[w_addr] <= w_data; 
             end
         end
     end
 
+    always @(*) begin
+
+        $display("r_data 1 = %d", r_data1);
+        $display("r_data 2 = %d", r_data2);
+    end
     assign r_data1 = (r_addr1 == 5'b00000) ? 32'b0 : registers[r_addr1];
     assign r_data2 = (r_addr2 == 5'b00000) ? 32'b0 :registers[r_addr2];
     

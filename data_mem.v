@@ -20,60 +20,84 @@ module data_mem (
     localparam MEM_WORD = 2'b10;
     
     always @(*) begin
+        read_data = 32'b0;
         if (mem_read) begin
             case (mem_size)
                 MEM_BYTE: begin  // Load byte
-                    case (byte_offset)
-                        2'b00: begin
+                    case (byte_offset) 
+                        2'b00: begin 
                             if (mem_unsigned) 
-                                read_data <= {24'b0, mem[word_addr][7:0]};    // Zero extend
+                                read_data = {24'b0, mem[word_addr][7:0]};    // Zero extend
                             else 
-                                read_data <= {{24{mem[word_addr][7]}}, mem[word_addr][7:0]};  // Sign extend
+                                read_data = {{24{mem[word_addr][7]}}, mem[word_addr][7:0]};  // Sign extend
                         end
-                        2'b01: begin
+                        2'b01: begin 
                             if (mem_unsigned)
-                                read_data <= {24'b0, mem[word_addr][15:8]};
+                                read_data = {24'b0, mem[word_addr][15:8]};
                             else
-                                read_data <= {{24{mem[word_addr][15]}}, mem[word_addr][15:8]};
+                                read_data = {{24{mem[word_addr][15]}}, mem[word_addr][15:8]};
                         end
-                        2'b10: begin
+                        2'b10: begin 
                             if (mem_unsigned)
-                                read_data <= {24'b0, mem[word_addr][23:16]};
+                                read_data = {24'b0, mem[word_addr][23:16]};
                             else
-                                read_data <= {{24{mem[word_addr][23]}}, mem[word_addr][23:16]};
+                                read_data = {{24{mem[word_addr][23]}}, mem[word_addr][23:16]};
                         end
-                        2'b11: begin
+                        2'b11: begin 
                             if (mem_unsigned)
-                                read_data <= {24'b0, mem[word_addr][31:24]};
+                                read_data = {24'b0, mem[word_addr][31:24]};
                             else
-                                read_data <= {{24{mem[word_addr][31]}}, mem[word_addr][31:24]};
+                                read_data = {{24{mem[word_addr][31]}}, mem[word_addr][31:24]};
                         end
                     endcase
                 end
                 
                 MEM_HALF: begin  // Load Halfword
-                    case (byte_offset[1])
-                        1'b0: begin
-                            if (mem_unsigned)
-                                read_data <= {16'b0, mem[word_addr][15:0]};    // Zero extend
-                            else
-                                read_data <= {{16{mem[word_addr][15]}}, mem[word_addr][15:0]};  // Sign extend
+                    // case (byte_offset[1])
+                    //     1'b0: begin
+                    //         if (mem_unsigned)
+                    //             read_data = {16'b0, mem[word_addr][15:0]};    // Zero extend
+                    //         else
+                    //             read_data = {{16{mem[word_addr][15]}}, mem[word_addr][15:0]};  // Sign extend
+                    //     end
+                    //     1'b1: begin
+                    //         if (mem_unsigned)
+                    //             read_data = {16'b0, mem[word_addr][31:16]};
+                    //         else
+                    //             read_data = {{16{mem[word_addr][31]}}, mem[word_addr][31:16]};
+                    //     end
+                    // endcase
+                    case (byte_offset)
+                        2'b00: begin
+                            read_data = mem_unsigned ?
+                                {16'b0, mem[word_addr][15:0]} :
+                                {{16{mem[word_addr][15]}}, mem[word_addr][15:0]};
                         end
-                        1'b1: begin
-                            if (mem_unsigned)
-                                read_data <= {16'b0, mem[word_addr][31:16]};
-                            else
-                                read_data <= {{16{mem[word_addr][31]}}, mem[word_addr][31:16]};
+
+                        2'b01: begin
+                            read_data = 32'b0;
+                        end
+
+                        2'b10: begin
+                            // bytes 2 + 3
+                            read_data = mem_unsigned ?
+                                {16'b0, mem[word_addr][31:16]} :
+                                {{16{mem[word_addr][31]}}, mem[word_addr][31:16]};
+                        end
+
+                        2'b11: begin
+                            
+                            read_data = 32'b0;
                         end
                     endcase
                 end
                 
                 MEM_WORD: begin  // Load Word
-                    read_data <= mem[word_addr];
+                    read_data = mem[word_addr];
                 end
                 
                 default: begin
-                    read_data <= mem[word_addr];
+                    read_data = mem[word_addr];
                 end
             endcase
         end

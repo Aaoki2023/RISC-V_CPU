@@ -49,8 +49,6 @@ module alu (
     assign or_res = in1 | in2;
     assign xor_res = in1 ^ in2;
     assign not_res = ~in1;
-    // assign shl_res = in1 << in2;
-    // assign shr_res = in1 >> in2;
     assign shl_res = in1 << in2[4:0];
     assign shr_res = in1 >> in2[4:0];
     assign sra_res = $signed(in1) >>> in2[4:0];
@@ -100,8 +98,6 @@ module alu (
             end
 
             XOR: begin
-                $display("in1= %h", in1);
-                $display("in2= %h", in2);
                 res = xor_res;
                 sign = res[31];
                 zero = (res == 0);
@@ -120,8 +116,6 @@ module alu (
             end
 
             SHR: begin
-                $display("in1 shr= %h", in1);
-                $display("in2 shr= %h", in2);
                 res = shr_res;
                 sign = res[31];
                 zero = (res == 0);
@@ -142,6 +136,7 @@ module alu (
             end
 
             SUB: begin
+                $display("in1=%d in2=%d equal=%b", in1, in2, (in1==in2));
                 res = sub_res;
                 carry = sub_carry;
                 overflow = sub_overflow;
@@ -149,14 +144,14 @@ module alu (
                 zero = (res == 0);
             end
 
-            CMP: begin
-                res = sub_res;
-                less_than = s_less;
-                equal = s_equal;
-                greater_than = s_greater;
-                sign = res[31];
-                zero = (res == 0);
-            end
+            // CMP: begin
+            //     res = sub_res;
+            //     less_than = s_less;
+            //     equal = s_equal;
+            //     greater_than = s_greater;
+            //     sign = res[31];
+            //     zero = (res == 0);
+            // end
 
             PASS_B: begin
                 res = in2;
@@ -167,6 +162,9 @@ module alu (
             end
 
         endcase
+        less_than = s_less;
+        equal = s_equal;
+        greater_than = s_greater;
         sign = res[31];
         zero = (res == 0);
     end
