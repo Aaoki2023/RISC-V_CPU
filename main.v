@@ -89,6 +89,10 @@ module main(
     reg ID_EX_branch;
     reg [2:0] ID_EX_branch_type;
     reg ID_EX_jalr;
+    reg [4:0] ID_EX_rs1;
+    reg [4:0] ID_EX_rs2;
+    reg [1:0] ID_EX_mem_size;
+    reg ID_EX_mem_unsigned;
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -109,6 +113,10 @@ module main(
             ID_EX_branch <= 0;
             ID_EX_branch_type <= 0;
             ID_EX_jalr <= 0;
+            ID_EX_rs1 <= 0;
+            ID_EX_rs2 <= 0;
+            ID_EX_mem_size <= 0;
+            ID_EX_mem_unsigned <= 0;
         end else begin
             ID_EX_data1 <= data1;
             ID_EX_data2 <= data2;
@@ -127,6 +135,10 @@ module main(
             ID_EX_mem_read <= mem_read;
             ID_EX_mem_write <= mem_write;
             ID_EX_mem_to_reg <= mem_to_reg;
+            ID_EX_rs1 <= rs1;
+            ID_EX_rs2 <= rs2;
+            ID_EX_mem_size <= mem_size;
+            ID_EX_mem_unsigned <= mem_unsigned;
         end
     end
 
@@ -140,6 +152,8 @@ module main(
     reg EX_MEM_mem_write;
     reg [31:0] EX_MEM_pc_plus_4;
     reg EX_MEM_jump;
+    reg [1:0] EX_MEM_mem_size;
+    reg EX_MEM_mem_unsigned;
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -152,9 +166,12 @@ module main(
             EX_MEM_mem_write <= 0;
             EX_MEM_pc_plus_4 <= 0;
             EX_MEM_jump <= 0;
+            EX_MEM_mem_size <= 0;
+            EX_MEM_mem_unsigned <= 0;
         end else begin
             EX_MEM_alu_res <= alu_res;
-            EX_MEM_data2 <= ID_EX_data2;
+            // EX_MEM_data2 <= ID_EX_data2;
+            EX_MEM_data2 <= alu_input2_fwd;
             EX_MEM_rd <= ID_EX_rd;
             EX_MEM_reg_write <= ID_EX_reg_write;
             EX_MEM_mem_to_reg <= ID_EX_mem_to_reg;
@@ -162,6 +179,8 @@ module main(
             EX_MEM_mem_write <= ID_EX_mem_write;
             EX_MEM_pc_plus_4 <= ID_EX_pc_plus_4;
             EX_MEM_jump <= ID_EX_jump;
+            EX_MEM_mem_size <= ID_EX_mem_size;
+            EX_MEM_mem_unsigned <= ID_EX_mem_unsigned;
         end
     end
 
@@ -254,8 +273,8 @@ module main(
 
     // forwwarding unit
     forwarding_unit FU (
-        .ID_EX_rs1(rs1),               
-        .ID_EX_rs2(rs2),              
+        .ID_EX_rs1(ID_EX_rs1),               
+        .ID_EX_rs2(ID_EX_rs2),              
         .EX_MEM_rd(EX_MEM_rd),         
         .MEM_WB_rd(MEM_WB_rd),         
         .EX_MEM_reg_write(EX_MEM_reg_write), 
@@ -308,11 +327,12 @@ module main(
         .w_data(final_write_data)
     );
 
-    assign alu_input2 = ID_EX_alu_src ? ID_EX_imm : ID_EX_data2;
-    assign alu_input1 = ID_EX_auipc ? ID_EX_pc : ID_EX_data1;
-    // assign alu_input1 = auipc ? pc : (forwardA == 2'b10 ? EX_MEM_alu_res :
-    //                               forwardA == 2'b01 ? MEM_WB_write_data :
-    //                               ID_EX_data1);
+    // assign alu_input2 = ID_EX_alu_src ? ID_EX_imm : ID_EX_data2;
+    // assign alu_input1 = ID_EX_auipc ? ID_EX_pc : ID_EX_data1;
+    assign alu_input1_fwd = (forwardA == 2'b10) ? EX_MEM_alu_res :
+                        (forwardA == 2'b01) ? write_back_data :
+                        ID_EX_data1;
+    assign alu_input1 = ID_EX_auipc ? ID_EX_pc : alu_input1_fwd;
     //assign alu_input2 = alu_src ? imm : data2;
     // assign alu_input1_fwd = ID_EX_auipc ? ID_EX_pc : 
     //                         (forwardA == 2'b10) ? EX_MEM_alu_res :
@@ -322,15 +342,16 @@ module main(
     // // // Operand 2
     // wire [31:0] reg2_mux;
     // assign reg2_mux = alu_src ? ID_EX_imm : ID_EX_data2; 
-    // assign alu_input2_fwd = (forwardB == 2'b10) ? EX_MEM_alu_res :
-    //                         (forwardB == 2'b01) ? final_write_data :
-    //                         reg2_mux;  
+    assign alu_input2_fwd = (forwardB == 2'b10) ? EX_MEM_alu_res :
+                             (forwardB == 2'b01) ? write_back_data :
+                             ID_EX_data2;
+    assign alu_input2 = ID_EX_alu_src ? ID_EX_imm : alu_input2_fwd;  
 
     alu A (
         //.in1(auipc ? pc : data1),
         .in1(alu_input1),
         .in2(alu_input2),
-        .control(alu_control),
+        .control(ID_EX_alu_control),
         .res(alu_res),
         .carry(alu_carry),
         .sign(alu_sign),
@@ -351,8 +372,8 @@ module main(
         //.mem_write(mem_write),
         .mem_read(EX_MEM_mem_read),
         .mem_write(EX_MEM_mem_write),
-        .mem_size(mem_size),
-        .mem_unsigned(mem_unsigned),
+        .mem_size(EX_MEM_mem_size),
+        .mem_unsigned(EX_MEM_mem_unsigned),
         .read_data(mem_data)
     );
 
