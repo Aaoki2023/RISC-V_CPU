@@ -15,6 +15,7 @@ module register_file (
                                  // figure out how to tell if something is going wrong in hardware so that you can start actually testing with the upduino
                                  // try to get jumps and branches done
                                  // look into pipelining try to get up to Part 3 done
+                                 // how would you actually test the hardware itself
     integer i;
 
     // initalize registers
@@ -61,3 +62,5 @@ endmodule
 
 // BRAM read and write widths are 16 bits. So what if instead we use two BRAM blocks one that contains the lower 16 bits and the other with 16 upper bits. Then I could read from both of them to get the full word width, this may also make the LB and LH simpler too.
 // I think for instr_mem I may run into the same issue since instructions are 32 bits. So maybe do the same thing? 
+
+// make sure the byte stores and loads will not override any of the upper 8 bits stored
