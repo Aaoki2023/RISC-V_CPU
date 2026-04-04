@@ -49,59 +49,59 @@ module branch_jump_tb;
         // BEQ skip check
         if (cpu.REGFILE.registers[4] != 0) begin
             $display("x4 = 0x%h", cpu.REGFILE.registers[4]);
-            $display("❌ BEQ FAILED: x4 should be 0");
+            $display("BEQ FAILED: x4 should be 0");
             errors++;
-        end else $display("✓ BEQ PASS");
+        end else $display("BEQ PASS");
 
         // BNE skip check
         if (cpu.REGFILE.registers[6] != 0) begin
-            $display("❌ BNE FAILED: x6 should be 0");
+            $display("BNE FAILED: x6 should be 0");
             errors++;
-        end else $display("✓ BNE PASS");
+        end else $display("BNE PASS");
 
         // BLT not taken
         if (cpu.REGFILE.registers[8] != 5) begin
-            $display("❌ BLT FAILED: x8 should be 5");
+            $display("BLT FAILED: x8 should be 5");
             errors++;
-        end else $display("✓ BLT PASS");
+        end else $display("BLT PASS");
 
         // BGE taken
         if (cpu.REGFILE.registers[9] != 0) begin
-            $display("❌ BGE FAILED: x9 should be 0");
+            $display("BGE FAILED: x9 should be 0");
             errors++;
-        end else $display("✓ BGE PASS");
+        end else $display("BGE PASS");
 
         // JAL skip
         if (cpu.REGFILE.registers[10] != 0) begin
             $display("x10 = 0x%h", cpu.REGFILE.registers[10]);
-            $display("❌ JAL FAILED: x10 should be 0");
+            $display("JAL FAILED: x10 should be 0");
             errors++;
-        end else $display("✓ JAL PASS");
+        end else $display("JAL PASS");
 
         // Post-JAL execution
         if (cpu.REGFILE.registers[11] != 73) begin
-            $display("❌ JAL FLOW FAILED: x11 should be 73");
+            $display("JAL FLOW FAILED: x11 should be 73");
             errors++;
-        end else $display("✓ JAL FLOW PASS");
+        end else $display("JAL FLOW PASS");
 
         // JALR skip
         if (cpu.REGFILE.registers[12] == 10) begin
-            $display("❌ JALR FAILED: x12 should NOT be 10");
+            $display("JALR FAILED: x12 should NOT be 10");
             errors++;
-        end else $display("✓ JALR PASS");
+        end else $display("JALR PASS");
 
         // AUIPC check (just nonzero)
         if (cpu.REGFILE.registers[14] == 0) begin
-            $display("❌ AUIPC FAILED");
+            $display("AUIPC FAILED");
             errors++;
-        end else $display("✓ AUIPC PASS");
+        end else $display("AUIPC PASS");
 
         $display("\n========================================");
 
         if (errors == 0)
-            $display("🎉 ALL TESTS PASSED");
+            $display("ALL TESTS PASSED");
         else
-            $display("❌ %0d TESTS FAILED", errors);
+            $display("%0d TESTS FAILED", errors);
 
         $finish;
     end

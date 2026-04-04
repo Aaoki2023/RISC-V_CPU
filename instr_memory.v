@@ -147,7 +147,7 @@ module instr_memory (
     
     assign instr = mem[pc[11:2]];
     
-    always @(posedge clk) begin
+    always @(negedge clk) begin
         if (write_enable) begin
             mem[write_addr[9:0]] <= write_data;
             

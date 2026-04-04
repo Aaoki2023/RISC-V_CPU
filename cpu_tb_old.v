@@ -154,12 +154,12 @@ module cpu_tb_old;
         
         // Critical 32-bit test
         if (cpu.REGFILE.registers[19] !== 32'h12345678) begin
-            $display("❌ CRITICAL: x19 = 0x%h, Expected: 0x12345678", 
+            $display("CRITICAL: x19 = 0x%h, Expected: 0x12345678", 
                      cpu.REGFILE.registers[19]);
             $display("   32-bit word load/store NOT working!");
             errors = errors + 1;
         end else begin
-            $display("✓ x19 = 0x12345678 - All 32 bits work!");
+            $display("x19 = 0x12345678 - All 32 bits work!");
         end
         
         // Other word tests
@@ -167,18 +167,18 @@ module cpu_tb_old;
             if (i == 19) continue; // Already checked above
             
             if (cpu.REGFILE.registers[i] !== expected_regs[i]) begin
-                $display("❌ ERROR: x%0d = 0x%h, Expected: 0x%h", 
+                $display("ERROR: x%0d = 0x%h, Expected: 0x%h", 
                          i, cpu.REGFILE.registers[i], expected_regs[i]);
                 errors = errors + 1;
             end else begin
-                $display("✓ x%0d = 0x%h", i, cpu.REGFILE.registers[i]);
+                $display("x%0d = 0x%h", i, cpu.REGFILE.registers[i]);
             end
         end
         
         if (errors == 0) begin
-            $display("\n✓✓✓ Word load/store tests PASSED\n");
+            $display("\nWord load/store tests PASSED\n");
         end else begin
-            $display("\n✗✗✗ Word load/store tests FAILED: %0d errors\n", errors);
+            $display("\nWord load/store tests FAILED: %0d errors\n", errors);
         end
         
         // ========================================
@@ -192,28 +192,28 @@ module cpu_tb_old;
         
         // LB sign extension (0xFF → 0xFFFFFFFF)
         if (cpu.REGFILE.registers[29] !== 32'hFFFFFFFF) begin
-            $display("❌ ERROR: x29 = 0x%h, Expected: 0xFFFFFFFF", 
+            $display("ERROR: x29 = 0x%h, Expected: 0xFFFFFFFF", 
                      cpu.REGFILE.registers[29]);
             $display("   LB sign extension NOT working!");
             errors = errors + 1;
         end else begin
-            $display("✓ x29 = 0xFFFFFFFF - LB sign extension works (0xFF → -1)");
+            $display("x29 = 0xFFFFFFFF - LB sign extension works (0xFF → -1)");
         end
         
         // LBU zero extension (0xFF → 0x000000FF)
         if (cpu.REGFILE.registers[30] !== 32'h000000FF) begin
-            $display("❌ ERROR: x30 = 0x%h, Expected: 0x000000FF", 
+            $display("ERROR: x30 = 0x%h, Expected: 0x000000FF", 
                      cpu.REGFILE.registers[30]);
             $display("   LBU zero extension NOT working!");
             errors = errors + 1;
         end else begin
-            $display("✓ x30 = 0x000000FF - LBU zero extension works (0xFF → 255)");
+            $display("x30 = 0x000000FF - LBU zero extension works (0xFF → 255)");
         end
         
         if (errors == 0) begin
-            $display("\n✓✓✓ Byte load/store tests PASSED\n");
+            $display("\nByte load/store tests PASSED\n");
         end else begin
-            $display("\n✗✗✗ Byte load/store tests FAILED: %0d errors\n", errors);
+            $display("\nByte load/store tests FAILED: %0d errors\n", errors);
         end
         
         // ========================================
@@ -227,48 +227,48 @@ module cpu_tb_old;
         
         // LH sign extension (0x8000 → 0xFFFF8000)
         if (cpu.REGFILE.registers[31] !== 32'hFFFF8000) begin
-            $display("❌ ERROR: x31 = 0x%h, Expected: 0xFFFF8000", 
+            $display("ERROR: x31 = 0x%h, Expected: 0xFFFF8000", 
                      cpu.REGFILE.registers[31]);
             $display("   LH sign extension NOT working!");
             errors = errors + 1;
         end else begin
-            $display("✓ x31 = 0xFFFF8000 - LH sign extension works (0x8000 → -32768)");
+            $display("x31 = 0xFFFF8000 - LH sign extension works (0x8000 -> -32768)");
         end
         
         // LHU zero extension (0x8000 → 0x00008000)
         if (cpu.REGFILE.registers[26] !== 32'h00008000) begin
-            $display("❌ ERROR: x26 = 0x%h, Expected: 0x00008000", 
+            $display("ERROR: x26 = 0x%h, Expected: 0x00008000", 
                      cpu.REGFILE.registers[26]);
             $display("   LHU zero extension NOT working!");
             errors = errors + 1;
         end else begin
-            $display("✓ x26 = 0x00008000 - LHU zero extension works (0x8000 → 32768)");
+            $display("x26 = 0x00008000 - LHU zero extension works (0x8000 -> 32768)");
         end
         
         // LH sign extension (0xFFFF → 0xFFFFFFFF)
         if (cpu.REGFILE.registers[27] !== 32'hFFFFFFFF) begin
-            $display("❌ ERROR: x27 = 0x%h, Expected: 0xFFFFFFFF", 
+            $display("ERROR: x27 = 0x%h, Expected: 0xFFFFFFFF", 
                      cpu.REGFILE.registers[27]);
             $display("   LH sign extension (0xFFFF) NOT working!");
             errors = errors + 1;
         end else begin
-            $display("✓ x27 = 0xFFFFFFFF - LH sign extension works (0xFFFF → -1)");
+            $display("x27 = 0xFFFFFFFF - LH sign extension works (0xFFFF -> -1)");
         end
         
         // LHU zero extension (0xFFFF → 0x0000FFFF)
         if (cpu.REGFILE.registers[28] !== 32'h0000FFFF) begin
-            $display("❌ ERROR: x28 = 0x%h, Expected: 0x0000FFFF", 
+            $display("ERROR: x28 = 0x%h, Expected: 0x0000FFFF", 
                      cpu.REGFILE.registers[28]);
             $display("   LHU zero extension (0xFFFF) NOT working!");
             errors = errors + 1;
         end else begin
-            $display("✓ x28 = 0x0000FFFF - LHU zero extension works (0xFFFF → 65535)");
+            $display("x28 = 0x0000FFFF - LHU zero extension works (0xFFFF -> 65535)");
         end
         
         if (errors == 0) begin
-            $display("\n✓✓✓ Halfword load/store tests PASSED\n");
+            $display("\nHalfword load/store tests PASSED\n");
         end else begin
-            $display("\n✗✗✗ Halfword load/store tests FAILED: %0d errors\n", errors);
+            $display("\nHalfword load/store tests FAILED: %0d errors\n", errors);
         end
         
         $display("  Test Summary");

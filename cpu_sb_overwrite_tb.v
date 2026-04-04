@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module cpu_tb;
+module cpu_tb_sb_overwrite;
 
     reg clk;
     reg rst;
@@ -37,41 +37,20 @@ module cpu_tb;
         repeat (20) @(posedge clk);
 
         $display("\n========================================");
-        $display("BYTE TESTS");
+        $display("BYTE + HALFWORD OVERWRITE TEST");
         $display("========================================");
 
-        // LB → expect sign extend
-        if (cpu.REGFILE.registers[3] !== 32'hFFFFFFFF) begin
-            $display("LB FAIL: x3 = 0x%h (expected FFFFFFFF)", cpu.REGFILE.registers[3]);
-            errors = errors + 1;
-        end else begin
-            $display("LB PASS");
-        end
-
-        // LBU → expect zero extend
-        if (cpu.REGFILE.registers[4] !== 32'h000000FF) begin
-            $display("LBU FAIL: x4 = 0x%h (expected 000000FF)", cpu.REGFILE.registers[4]);
-            errors = errors + 1;
-        end else begin
-            $display("LBU PASS");
-        end
-
-
-        $display("\n========================================");
-        $display("HALFWORD TESTS");
-        $display("========================================");
-
-        // LH → expect
-        if (cpu.REGFILE.registers[6] !== 32'hFFFF8000) begin
-            $display("LH FAIL: x5 = 0x%h (expected FFFF8000)", cpu.REGFILE.registers[5]);
+        // LH → should reflect overwritten byte + sign extend
+        if (cpu.REGFILE.registers[4] !== 32'hFFFF80AA) begin
+            $display("LH FAIL: x4 = 0x%h (expected FFFF80AA)", cpu.REGFILE.registers[4]);
             errors = errors + 1;
         end else begin
             $display("LH PASS");
         end
 
-        // LHU → expect zero extend
-        if (cpu.REGFILE.registers[7] !== 32'h00008000) begin
-            $display("LHU FAIL: x6 = 0x%h (expected 00008000)", cpu.REGFILE.registers[6]);
+        // LHU → should reflect overwritten byte, zero extend
+        if (cpu.REGFILE.registers[5] !== 32'h000080AA) begin
+            $display("LHU FAIL: x5 = 0x%h (expected 000080AA)", cpu.REGFILE.registers[5]);
             errors = errors + 1;
         end else begin
             $display("LHU PASS");
