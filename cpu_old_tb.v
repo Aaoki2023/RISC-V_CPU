@@ -1,5 +1,10 @@
 `timescale 1ns / 1ps
 
+/**
+Ignore the load and store tests in this file, I ran out of registers to use so they won't pass
+I moved them to the cpu_tb.v testbench instead so that way I would have enough registers.
+*/
+
 module cpu_tb_old;
 
     // Inputs

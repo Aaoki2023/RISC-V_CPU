@@ -78,6 +78,18 @@ module cpu_tb;
         end
 
         $display("\n========================================");
+        $display("WORD TESTS");
+        $display("========================================");
+
+        // SW/LW test: store 0x12345000 at mem[4] and load into x5
+        if (cpu.REGFILE.registers[5] !== 32'h12345678) begin
+            $display("WORD FAIL: x5 = 0x%h (expected 12345678)", cpu.REGFILE.registers[5]);
+            errors = errors + 1;
+        end else begin
+            $display("WORD PASS: x5 = 0x%h", cpu.REGFILE.registers[5]);
+        end
+
+        $display("\n========================================");
         $display("DEBUG: MEMORY CONTENT");
         $display("========================================");
 
