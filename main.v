@@ -88,6 +88,9 @@ endmodule;
     wire [31:0] alu_input1_fwd;
     wire [31:0] alu_input2_fwd;
 
+    // stalling signal
+    wire stall;
+
     // flushing signals
     wire flush;
     wire EX_branch_taken;
@@ -108,7 +111,7 @@ endmodule;
             IF_ID_pc <= 0;
             IF_ID_instr <= 32'h00000013; // (NOP)
             IF_ID_pc_plus_4 <= 0;
-        end else begin
+        end else if (!stall) begin
             IF_ID_pc <= pc;
             IF_ID_instr <= instr;
             IF_ID_pc_plus_4 <= pc_plus_4;
@@ -137,6 +140,13 @@ endmodule;
     reg [4:0] ID_EX_rs2;
     reg [1:0] ID_EX_mem_size;
     reg ID_EX_mem_unsigned;
+
+    // stalling logic
+    
+
+    assign stall = ID_EX_mem_read &&
+               ((ID_EX_rd == rs1) || (ID_EX_rd == rs2)) &&
+               (ID_EX_rd != 0);
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -169,6 +179,16 @@ endmodule;
             ID_EX_mem_read <= 0;
             ID_EX_jump <= 0;
             ID_EX_branch <= 0;
+        end else if (stall) begin
+            ID_EX_rd <= 0;
+            ID_EX_reg_write <= 0;
+            ID_EX_mem_write <= 0;
+            ID_EX_mem_read <= 0;
+            ID_EX_mem_to_reg <= 0;
+            ID_EX_alu_control <= 0;
+            ID_EX_alu_src <= 0;
+            ID_EX_branch <= 0;
+            ID_EX_jump <= 0;
         end else begin
             ID_EX_data1 <= data1;
             ID_EX_data2 <= data2;
@@ -326,7 +346,11 @@ endmodule;
     // assign pc_next = pc_src ? (jump ? jump_target : branch_target) : pc_plus_4;
     // assign pc_next = pc_src ? EX_pc_plus_imm : 
     //      ID_EX_jump ? EX_jump_target : pc_plus_4;
-    assign pc_next = pc_src ? EX_jump_target : pc_plus_4;
+    // assign pc_next = pc_src ? EX_jump_target : pc_plus_4;
+
+    // STALLING PC
+    assign pc_next = stall ? pc : 
+                 (pc_src ? EX_jump_target : pc_plus_4);
 
     // forwwarding unit
     forwarding_unit FU (

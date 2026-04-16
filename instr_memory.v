@@ -161,7 +161,7 @@ module instr_memory (
         for (i = 0; i < 1024; i = i + 1)
             mem[i] = 32'h00000013;
 
-        $readmemh("program_old.hex", mem); // streamline your risc-v to hex so that way you know what your hex is doing
+        $readmemh("program_hw_byte.hex", mem); // streamline your risc-v to hex so that way you know what your hex is doing
         $display("mem[0] = %h", mem[0]);
     end
 
