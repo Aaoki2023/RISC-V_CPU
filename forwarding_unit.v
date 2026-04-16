@@ -15,17 +15,17 @@ module forwarding_unit(
         forwardB = 2'b00;
 
         // Operand A
-        if (EX_MEM_reg_write && EX_MEM_rd != 0 && EX_MEM_rd == ID_EX_rs1)
+        if (EX_MEM_reg_write && (EX_MEM_rd != 0) && (EX_MEM_rd == ID_EX_rs1))
             forwardA = 2'b10; // EX hazard (1 instruction ago)
-        else if (MEM_WB_reg_write && MEM_WB_rd != 0 && MEM_WB_rd == ID_EX_rs1)
+        else if (MEM_WB_reg_write && (MEM_WB_rd != 0) && (MEM_WB_rd == ID_EX_rs1))
             forwardA = 2'b01; // MEM hazard (2 instructions ago)
         else
             forwardA = 2'b00; // No hazard
 
         // Operand B
-        if (EX_MEM_reg_write && EX_MEM_rd != 0 && EX_MEM_rd == ID_EX_rs2)
+        if (EX_MEM_reg_write && (EX_MEM_rd != 0) && (EX_MEM_rd == ID_EX_rs2))
             forwardB = 2'b10; // EX hazard
-        else if (MEM_WB_reg_write && MEM_WB_rd != 0 && MEM_WB_rd == ID_EX_rs2)
+        else if (MEM_WB_reg_write && (MEM_WB_rd != 0) && (MEM_WB_rd == ID_EX_rs2))
             forwardB = 2'b01; // MEM hazard
         else
             forwardB = 2'b00; // No hazard

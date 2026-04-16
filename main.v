@@ -7,6 +7,39 @@ module main(
     output wire [31:0] alu_res
 );
 
+/**
+TODOs: Need to add flushing as well as stalling
+
+Ideas:
+Flushing:
+
+
+Stalling:
+- we need stalling when the wb hasn't yet occured and we need the value in the execution stage
+- this means we would need to stall for two cycles so that the WB occurs
+- or alternatively, we can stall one cycle and just pull from the MEM/WB Register
+- how do we stall?
+- we need a stall control signal that will control the pc_next
+    pc_next = stall ? pc : pc_next;
+- how do we control the stall signal? 
+- There will need to be another component that will need to know the rd of the first execution and the rs1 and rs2 of the second
+
+module stall_sig(
+    input wire [4:0] rd,
+    input wire [4:0] rs1,
+    input wire [4:0] rs2,
+
+    output wire stall
+);
+
+assign stall = (rd == rs1) ? ((rd == rs2) ? 1'b1 : 1'b0) : 1'b0;
+
+endmodule;
+| IF | ID | EX | MEM | WB |
+|    | IF | ID |     |    |  EX  | MEM | WB |
+
+*/
+
     wire [31:0] pc;
     wire [31:0] pc_next;
     wire [31:0] pc_plus_4;
@@ -55,6 +88,13 @@ module main(
     wire [31:0] alu_input1_fwd;
     wire [31:0] alu_input2_fwd;
 
+    // flushing signals
+    wire flush;
+    wire EX_branch_taken;
+    wire EX_jump;
+
+    assign flush = EX_branch_taken || EX_jump;
+
     // IF / ID
     reg [31:0] IF_ID_pc;
     reg [31:0] IF_ID_instr;
@@ -63,6 +103,10 @@ module main(
         if (rst) begin
             IF_ID_pc <= 0;
             IF_ID_instr <= 0;
+            IF_ID_pc_plus_4 <= 0;
+        end else if (flush) begin
+            IF_ID_pc <= 0;
+            IF_ID_instr <= 32'h00000013; // (NOP)
             IF_ID_pc_plus_4 <= 0;
         end else begin
             IF_ID_pc <= pc;
@@ -117,6 +161,14 @@ module main(
             ID_EX_rs2 <= 0;
             ID_EX_mem_size <= 0;
             ID_EX_mem_unsigned <= 0;
+        end else if (flush) begin
+            // clear control signals but keep data
+            ID_EX_rd <= 0;
+            ID_EX_reg_write <= 0;
+            ID_EX_mem_write <= 0;
+            ID_EX_mem_read <= 0;
+            ID_EX_jump <= 0;
+            ID_EX_branch <= 0;
         end else begin
             ID_EX_data1 <= data1;
             ID_EX_data2 <= data2;
@@ -238,9 +290,12 @@ module main(
     // assign branch_target = EX_pc_plus_imm;
 
     wire [31:0] EX_jump_target;
+    // assign EX_jump_target =
+    //     ID_EX_jalr ? ((ID_EX_data1 + ID_EX_imm) & 32'hFFFFFFFE)
+    //             : EX_pc_plus_imm;
     assign EX_jump_target =
-        ID_EX_jalr ? ((ID_EX_data1 + ID_EX_imm) & 32'hFFFFFFFE)
-                : EX_pc_plus_imm;
+            ID_EX_jalr ? ((alu_input1_fwd + ID_EX_imm) & 32'hFFFFFFFE)
+                    : EX_pc_plus_imm;
     
     // Branch decision logic
     // assign branch_taken = branch && (
@@ -251,7 +306,7 @@ module main(
     //     (branch_type == 3'b110 && less_than_flag) ||       // BLTU - unsigned
     //     (branch_type == 3'b111 && !less_than_flag)         // BGEU - unsigned
     // );
-    wire EX_branch_taken;
+    //wire EX_branch_taken;
 
     assign EX_branch_taken = ID_EX_branch && (
         (ID_EX_branch_type == 3'b000 && equal_flag) ||
@@ -261,6 +316,8 @@ module main(
         (ID_EX_branch_type == 3'b110 && less_than_flag) ||
         (ID_EX_branch_type == 3'b111 && !less_than_flag)
     );
+
+    assign EX_jump = ID_EX_jump;
     
     
     // Next PC mux

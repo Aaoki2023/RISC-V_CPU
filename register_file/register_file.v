@@ -7,8 +7,8 @@ module register_file (
     input wire [4:0] w_addr,
     input wire [31:0] w_data,
 
-    output wire [31:0] r_data1,
-    output wire [31:0] r_data2
+    output reg [31:0] r_data1,
+    output reg [31:0] r_data2
 );
 
     reg [31:0] registers [31:0]; // make sure the register file is running fast enough to fit within the clock cycle along with load/stores and alu
@@ -37,14 +37,25 @@ module register_file (
         end
     end
 
-    always @(*) begin
+    // always @(*) begin
 
-        $display("r_data 1 = %d", r_data1);
-        $display("r_data 2 = %d", r_data2);
-    end
-    assign r_data1 = (r_addr1 == 5'b00000) ? 32'b0 : registers[r_addr1];
-    assign r_data2 = (r_addr2 == 5'b00000) ? 32'b0 :registers[r_addr2];
-    
+    //     $display("r_data 1 = %d", r_data1);
+    //     $display("r_data 2 = %d", r_data2);
+    // end
+    // assign r_data1 = (r_addr1 == 5'b00000) ? 32'b0 : registers[r_addr1];
+    // assign r_data2 = (r_addr2 == 5'b00000) ? 32'b0 :registers[r_addr2];
+    // always @(negedge clk) begin  
+    //     r_data1 = registers[r_addr1];   
+    //     r_data2 = registers[r_addr2];
+    // end
+    assign r_data1 = (r_addr1 == 0) ? 0 :
+                 (w_enable && w_addr == r_addr1) ? w_data :
+                 registers[r_addr1];
+
+    assign r_data2 = (r_addr2 == 0) ? 0 :
+                    (w_enable && w_addr == r_addr2) ? w_data :
+                    registers[r_addr2];
+        
 endmodule
 
 
@@ -64,3 +75,10 @@ endmodule
 // I think for instr_mem I may run into the same issue since instructions are 32 bits. So maybe do the same thing? 
 
 // make sure the byte stores and loads will not override any of the upper 8 bits stored
+
+
+// branch prediction -- this one Milda really likes it seems
+// SIMD instructions
+// dual instruction read instructions
+// basically just make your processor closer to modern processors
+// floating point unit, SIMD --> this is what ARM Neon does but is currently theoretical in RISC-V, divide unit (from textbook), register renaming (probably not feasible though), build a GPU? impossible on a FPGA but could just do HDL? - it's like SIMD on steroids

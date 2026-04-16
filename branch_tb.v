@@ -2,6 +2,10 @@
 
 module branch_jump_tb;
 
+    /*
+    Use program.hex
+    */
+
     reg clk;
     reg rst;
 

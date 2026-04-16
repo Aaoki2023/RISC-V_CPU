@@ -2,6 +2,10 @@
 
 module cpu_tb;
 
+    /*
+    Use program_hw_byte.hex
+    */
+
     reg clk;
     reg rst;
 

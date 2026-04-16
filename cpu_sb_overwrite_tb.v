@@ -2,6 +2,11 @@
 
 module cpu_tb_sb_overwrite;
 
+
+    /*
+    use program_byte_overwrite.hex
+    */
+
     reg clk;
     reg rst;
 
