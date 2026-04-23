@@ -2,6 +2,19 @@
 
 module main_tb;
 
+    /**
+    Use stalling.hex
+
+    You can see stalling occur in this testbench with repeated pc values (i.e pc 14 appears twice)
+
+    The last 4 commands corresponds to the note on the last page of the slides with the subsequenct store
+    after load. You can see that no stalling occurs and the expected outputs are 
+    x5 = 10
+    x6 = 10
+    x7 = 20
+    x9 = 10
+    **/
+
     reg clk;
     reg rst;
 
@@ -33,7 +46,7 @@ module main_tb;
         // Run simulation long enough
         #400;
 
-        $display("\n==== FINAL REGISTER STATE ====");
+        $display("\n==== FINAL STATES ====");
         $display("x5 = %d", cpu.REGFILE.registers[5]);
         $display("x6 = %d", cpu.REGFILE.registers[6]);
         $display("x7 = %d", cpu.REGFILE.registers[7]);

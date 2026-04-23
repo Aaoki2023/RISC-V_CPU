@@ -2,6 +2,16 @@
 
 module forwarding_tb;
 
+    /*
+    Use test_forwarding.hex
+
+    This testbench checks that the forwarding unit works. It displays each cycle and the forwarding
+    control signals so you can visually ensure that forwarding is happening.
+
+    Also does a value check to make sure forwarding occurs. Checks mixed forwarding, one cycle apart,
+    two cycle apart, EX/MEM, MEM/WB forwarding.
+    */
+
     reg clk;
     reg rst;
     
@@ -20,16 +30,12 @@ module forwarding_tb;
         .alu_res(alu_res)
     );
     
-    // Clock: 10ns period
     initial begin
         clk = 0;
         forever #5 clk = ~clk;
     end
     
     initial begin
-        $display("\n========================================");
-        $display("  FORWARDING UNIT TEST");
-        $display("========================================\n");
         
         errors = 0;
         cycle_count = 0;
@@ -39,14 +45,13 @@ module forwarding_tb;
         #20;
         rst = 0;
         
-        // Monitor forwarding signals for first 20 cycles
         $display("Monitoring Forwarding Signals:\n");
         $display("Cycle | forwardA | forwardB | ID/EX_rs1 | ID/EX_rs2 | EX/MEM_rd | MEM/WB_rd | Instruction");
         $display("------|----------|----------|-----------|-----------|-----------|-----------|-------------");
         
         repeat(20) begin
             @(posedge clk);
-            #1;  // Let signals settle
+            #1;  
             
             $display("%5d |    %2b    |    %2b    |    %2d     |    %2d     |    %2d     |    %2d     | %h",
                      cycle_count,
@@ -62,11 +67,11 @@ module forwarding_tb;
         end
         
         $display("\n========================================");
-        $display("REGISTER VALUE VERIFICATION");
+        $display("REGISTER VALUE CHECK");
         $display("========================================\n");
         
-        // Test 1: EX/MEM Forwarding
-        $display("Test 1: EX/MEM Forwarding (RAW 1 cycle apart)");
+        // EX/MEM Forwarding
+        $display("EX/MEM Forwarding (1 cycle diff)");
         if (cpu.REGFILE.registers[1] !== 32'd10) begin
             $display("x1 = %d (expected 10)", cpu.REGFILE.registers[1]);
             errors = errors + 1;
@@ -82,8 +87,8 @@ module forwarding_tb;
             $display("x2 = %d - EX/MEM forwarding works!", cpu.REGFILE.registers[2]);
         end
         
-        // Test 2: MEM/WB Forwarding
-        $display("\nTest 2: MEM/WB Forwarding (RAW 2 cycles apart)");
+        // MEM/WB Forwarding
+        $display("\nTest 2: MEM/WB Forwarding (2 cycle diff)");
         if (cpu.REGFILE.registers[3] !== 32'd20) begin
             $display("x3 = %d (expected 20)", cpu.REGFILE.registers[3]);
             errors = errors + 1;
@@ -99,8 +104,8 @@ module forwarding_tb;
             $display("x4 = %d - MEM/WB forwarding works!", cpu.REGFILE.registers[4]);
         end
         
-        // Test 3: Back-to-Back Dependencies
-        $display("\nTest 3: Back-to-Back Dependencies");
+        // Back-to-Back Dependencies
+        $display("\nBack-to-Back Dependencies");
         if (cpu.REGFILE.registers[5] !== 32'd100) begin
             $display("x5 = %d (expected 100)", cpu.REGFILE.registers[5]);
             errors = errors + 1;
@@ -125,8 +130,8 @@ module forwarding_tb;
             $display("x7 = %d - Mixed forwarding works!", cpu.REGFILE.registers[7]);
         end
         
-        // Test 4: Multiple Forwarding Paths
-        $display("\nTest 4: Multiple Forwarding Paths");
+        // Multiple Forwarding Paths
+        $display("\nMultiple Forwarding Paths");
         if (cpu.REGFILE.registers[8] !== 32'd50) begin
             $display("x8 = %d (expected 50)", cpu.REGFILE.registers[8]);
             errors = errors + 1;
@@ -157,7 +162,7 @@ module forwarding_tb;
         
         // Summary
         $display("\n========================================");
-        $display("FORWARDING UNIT TEST SUMMARY");
+        $display("SUMMARY");
         $display("========================================");
         
         if (errors == 0) begin
@@ -173,7 +178,7 @@ module forwarding_tb;
     
     initial begin
         #3000;
-        $display("\n❌ Timeout!");
+        $display("\nTimeout!");
         $finish;
     end
 

@@ -31,7 +31,6 @@ module register_file (
         // can also write on negative clock edge
         else begin
             if (w_enable && w_addr != 5'b00000) begin
-                $display("w_addr=%d w_data=%d", w_addr, w_data);
                 registers[w_addr] <= w_data; 
             end
         end

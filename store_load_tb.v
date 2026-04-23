@@ -1,9 +1,11 @@
 `timescale 1ns / 1ps
 
-module cpu_tb;
+module store_load_tb;
 
     /*
     Use program_hw_byte.hex
+
+    Basic store and load functionalities for bytes, halfwords, and words.
     */
 
     reg clk;
@@ -44,7 +46,7 @@ module cpu_tb;
         $display("BYTE TESTS");
         $display("========================================");
 
-        // LB → expect sign extend
+        // LB sign extend
         if (cpu.REGFILE.registers[3] !== 32'hFFFFFFFF) begin
             $display("LB FAIL: x3 = 0x%h (expected FFFFFFFF)", cpu.REGFILE.registers[3]);
             errors = errors + 1;
@@ -52,7 +54,7 @@ module cpu_tb;
             $display("LB PASS");
         end
 
-        // LBU → expect zero extend
+        // LBU zero extend
         if (cpu.REGFILE.registers[4] !== 32'h000000FF) begin
             $display("LBU FAIL: x4 = 0x%h (expected 000000FF)", cpu.REGFILE.registers[4]);
             errors = errors + 1;
@@ -65,7 +67,7 @@ module cpu_tb;
         $display("HALFWORD TESTS");
         $display("========================================");
 
-        // LH → expect
+        // LH sign extend
         if (cpu.REGFILE.registers[6] !== 32'hFFFF8000) begin
             $display("LH FAIL: x5 = 0x%h (expected FFFF8000)", cpu.REGFILE.registers[5]);
             errors = errors + 1;
@@ -73,7 +75,7 @@ module cpu_tb;
             $display("LH PASS");
         end
 
-        // LHU → expect zero extend
+        // LHU zero extend
         if (cpu.REGFILE.registers[7] !== 32'h00008000) begin
             $display("LHU FAIL: x6 = 0x%h (expected 00008000)", cpu.REGFILE.registers[6]);
             errors = errors + 1;
@@ -85,7 +87,7 @@ module cpu_tb;
         $display("WORD TESTS");
         $display("========================================");
 
-        // SW/LW test: store 0x12345000 at mem[4] and load into x5
+        // SW/LW test
         if (cpu.REGFILE.registers[5] !== 32'h12345678) begin
             $display("WORD FAIL: x5 = 0x%h (expected 12345678)", cpu.REGFILE.registers[5]);
             errors = errors + 1;
@@ -94,13 +96,7 @@ module cpu_tb;
         end
 
         $display("\n========================================");
-        $display("DEBUG: MEMORY CONTENT");
-        $display("========================================");
-
-        $display("mem[0] = 0x%h", cpu.DMEM.mem[0]);
-
-        $display("\n========================================");
-        $display("RESULT");
+        $display("SUMMARY");
         $display("========================================");
 
         if (errors == 0) begin

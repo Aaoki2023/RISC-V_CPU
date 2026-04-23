@@ -3,7 +3,9 @@
 module branch_jump_tb;
 
     /*
-    Use program.hex
+    Use program_branch.hex
+
+    Checks all of our branching and jumping functionality.
     */
 
     reg clk;
@@ -47,7 +49,7 @@ module branch_jump_tb;
         errors = 0;
 
         $display("\n========================================");
-        $display("CHECKING RESULTS");
+        $display("SUMMARY");
         $display("========================================");
 
         // BEQ skip check
@@ -94,7 +96,7 @@ module branch_jump_tb;
             errors++;
         end else $display("JALR PASS");
 
-        // AUIPC check (just nonzero)
+        // AUIPC check (just zeros)
         if (cpu.REGFILE.registers[14] == 0) begin
             $display("AUIPC FAILED");
             errors++;

@@ -1,14 +1,12 @@
 `timescale 1ns / 1ps
 
-/**
-Ignore the load and store tests in this file, I ran out of registers to use so they won't pass
-I moved them to the cpu_tb.v testbench instead so that way I would have enough registers.
-*/
 
-module cpu_tb_old;
+module basic_tb;
 
     /*
-    Use program_old.hex
+    Use program_basic.hex
+
+    Checks basic ALU functions. Checks shifts, arithmetic, and boolean logic gates.
     */
 
     // Inputs
@@ -59,37 +57,7 @@ module cpu_tb_old;
         expected_regs[14] = 32'd235;          // xori x14, x2, 0xFF (20^255)
         expected_regs[15] = 32'd275;          // add x15, x10, x13 (25+250)
         expected_regs[16] = 32'd40;           // sub x16, x15, x14 (275-235)
-        // expected_regs[17] = 32'd42;           // Will store and load 42
-        // expected_regs[18] = 32'd100;          // Base address for array
-        // expected_regs[19] = 32'd11;           // Array element 0
-        // expected_regs[20] = 32'd22;           // Array element 1
-        // expected_regs[21] = 32'd33;           // Array element 2
-        // expected_regs[22] = 32'd11;           // Loaded from mem[0]
-        // expected_regs[23] = 32'd22;           // Loaded from mem[4]
-        // expected_regs[24] = 32'd33;           // Loaded from mem[8] test something larger than 42
-
-        expected_regs[17] = 32'hdeadaeef;     // Built value
-        expected_regs[18] = 32'h00000000;     // Base address
-        expected_regs[19] = 32'h12345678;     // Loaded (32-bit test!)
-        expected_regs[20] = 32'hFFFFFFFF;     // All bits set
-        expected_regs[21] = 32'hFFFFFFFF;     // Loaded
-        expected_regs[22] = 32'h80000000;     // MSB set
-        expected_regs[23] = 32'h80000000;     // Loaded
         
-        // Byte/halfword tests (final values after overwrites)
-        expected_regs[24] = 32'd200;          // Base address (halfword tests)
-        expected_regs[25] = 32'h00001234;     // LHU result
-        expected_regs[26] = 32'h00008000;     // LHU of 0x8000 (zero-extended)
-        expected_regs[27] = 32'hFFFFFFFF;     // LH of 0xFFFF (sign-extended)
-        expected_regs[28] = 32'h0000FFFF;     // LHU of 0xFFFF (zero-extended)
-        expected_regs[29] = 32'hFFFFFFFF;     // LB of 0xFF (sign-extended)
-        expected_regs[30] = 32'h000000FF;     // LBU of 0xFF (zero-extended)
-        expected_regs[31] = 32'hFFFF8000;     // LH of 0x8000 (sign-extended)
-
-        // Registers 25-31
-        for (i = 25; i < 32; i = i + 1) begin
-            expected_regs[i] = 32'd0;
-        end
         
         // reset the CPU
         rst = 1;
@@ -99,7 +67,7 @@ module cpu_tb_old;
         #5;
         $display("Reset complete \n");
         
-        $display("Executing instructions...\\n");
+        $display("Executing instructions\n");
         $display("Cycle | PC  | Instruction | ALU Result");
         $display("------|-----|-------------|------------");
         for (i = 0; i < 70; i = i + 1) begin
@@ -128,28 +96,10 @@ module cpu_tb_old;
                          cpu.REGFILE.registers[i]);
             end
         end
-
-        // // Check x17-x24
-        // for (i = 17; i <= 31; i = i + 1) begin
-        //     if (cpu.REGFILE.registers[i] !== expected_regs[i]) begin
-        //         $display("ERROR: x%0d = %d (0x%h), Expected: %d (0x%h)", 
-        //                  i, 
-        //                  $signed(cpu.REGFILE.registers[i]),
-        //                  cpu.REGFILE.registers[i],
-        //                  $signed(expected_regs[i]),
-        //                  expected_regs[i]);
-        //         errors = errors + 1;
-        //     end else begin
-        //         $display("x%0d = %d (0x%h)", 
-        //                  i, 
-        //                  $signed(cpu.REGFILE.registers[i]),
-        //                  cpu.REGFILE.registers[i]);
-        //     end
-        // end
         
         
         
-        $display("  Test Summary");
+        $display("Test Summary");
         $display("Total Registers Checked: 32");
         $display("Errors Found: %0d", errors);
         
@@ -168,21 +118,13 @@ module cpu_tb_old;
         end
         
         // Check that no unwritten registers were corrupted
-        // $display("\nChecking unwritten registers (x17-x31)...");
-        // for (i = 25; i < 32; i = i + 1) begin
-        //     if (cpu.REGFILE.registers[i] !== 32'd0) begin
-        //         $display("x%0d was corrupted (value = %d)", i, cpu.REGFILE.registers[i]);
-        //     end
-        // end
-        // $display("No corrupted registers");
-        
-        // // Check final PC value
-        // $display("\nFinal PC: %d (0x%h)", pc, pc);
-        // if (pc == 32'd108) begin  
-        //     $display("PC works");
-        // end else begin
-        //     $display("Expected PC=64, got PC=%d", pc);
-        // end
+        $display("\nChecking unwritten registers (x17-x31)");
+        for (i = 25; i < 32; i = i + 1) begin
+            if (cpu.REGFILE.registers[i] !== 32'd0) begin
+                $display("x%0d was corrupted (value = %d)", i, cpu.REGFILE.registers[i]);
+            end
+        end
+        $display("No corrupted registers");
         
         
         $finish;

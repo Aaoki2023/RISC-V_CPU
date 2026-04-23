@@ -7,39 +7,6 @@ module main(
     output wire [31:0] alu_res
 );
 
-/**
-TODOs: Need to add flushing as well as stalling
-
-Ideas:
-Flushing:
-
-
-Stalling:
-- we need stalling when the wb hasn't yet occured and we need the value in the execution stage
-- this means we would need to stall for two cycles so that the WB occurs
-- or alternatively, we can stall one cycle and just pull from the MEM/WB Register
-- how do we stall?
-- we need a stall control signal that will control the pc_next
-    pc_next = stall ? pc : pc_next;
-- how do we control the stall signal? 
-- There will need to be another component that will need to know the rd of the first execution and the rs1 and rs2 of the second
-
-module stall_sig(
-    input wire [4:0] rd,
-    input wire [4:0] rs1,
-    input wire [4:0] rs2,
-
-    output wire stall
-);
-
-assign stall = (rd == rs1) ? ((rd == rs2) ? 1'b1 : 1'b0) : 1'b0;
-
-endmodule;
-| IF | ID | EX | MEM | WB |
-|    | IF | ID |     |    |  EX  | MEM | WB |
-
-*/
-
     wire [31:0] pc;
     wire [31:0] pc_next;
     wire [31:0] pc_plus_4;
@@ -247,8 +214,6 @@ endmodule;
             EX_MEM_mem_unsigned <= 0;
         end else begin
             EX_MEM_alu_res <= alu_res;
-            // EX_MEM_data2 <= ID_EX_data2;
-            // EX_MEM_data2 <= alu_input2_fwd;
             EX_MEM_data2 <= store_data2_fwd;
             EX_MEM_rd <= ID_EX_rd;
             EX_MEM_reg_write <= ID_EX_reg_write;
@@ -301,19 +266,8 @@ endmodule;
     // PC + 4 
     assign pc_plus_4 = pc + 4;
     
-    // PC + immediate
-    // assign pc_plus_imm = pc + imm;
-    
-    // branch target = pc_plus_imm
-    // assign branch_target = pc_plus_imm;
-    
-    
-    // JAL: PC + immediate
-    // JALR: (rs1 + immediate) & ~1 
-    // assign jump_target = jalr ? ((data1 + imm) & 32'hFFFFFFFE) : pc_plus_imm;
     wire [31:0] EX_pc_plus_imm;
     assign EX_pc_plus_imm = ID_EX_pc + ID_EX_imm;
-    // assign branch_target = EX_pc_plus_imm;
 
     wire [31:0] EX_jump_target;
     // assign EX_jump_target =

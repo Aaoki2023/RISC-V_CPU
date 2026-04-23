@@ -136,7 +136,6 @@ module alu (
             end
 
             SUB: begin
-                $display("in1=%d in2=%d equal=%b", in1, in2, (in1==in2));
                 res = sub_res;
                 carry = sub_carry;
                 overflow = sub_overflow;
