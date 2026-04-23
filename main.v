@@ -270,24 +270,11 @@ module main(
     assign EX_pc_plus_imm = ID_EX_pc + ID_EX_imm;
 
     wire [31:0] EX_jump_target;
-    // assign EX_jump_target =
-    //     ID_EX_jalr ? ((ID_EX_data1 + ID_EX_imm) & 32'hFFFFFFFE)
-    //             : EX_pc_plus_imm;
     assign EX_jump_target =
             ID_EX_jalr ? ((alu_input1_fwd + ID_EX_imm) & 32'hFFFFFFFE)
                     : EX_pc_plus_imm;
     
     // Branch decision logic
-    // assign branch_taken = branch && (
-    //     (branch_type == 3'b000 && equal_flag) ||           // BEQ
-    //     (branch_type == 3'b001 && !equal_flag) ||          // BNE
-    //     (branch_type == 3'b100 && less_than_flag) ||       // BLT - signed
-    //     (branch_type == 3'b101 && !less_than_flag) ||      // BGE - signed
-    //     (branch_type == 3'b110 && less_than_flag) ||       // BLTU - unsigned
-    //     (branch_type == 3'b111 && !less_than_flag)         // BGEU - unsigned
-    // );
-    //wire EX_branch_taken;
-
     assign EX_branch_taken = ID_EX_branch && (
         (ID_EX_branch_type == 3'b000 && equal_flag) ||
         (ID_EX_branch_type == 3'b001 && !equal_flag) ||
@@ -302,11 +289,6 @@ module main(
     
     // Next PC mux
     assign pc_src = EX_branch_taken || ID_EX_jump;
-    // assign pc_src = branch_taken || jump;
-    // assign pc_next = pc_src ? (jump ? jump_target : branch_target) : pc_plus_4;
-    // assign pc_next = pc_src ? EX_pc_plus_imm : 
-    //      ID_EX_jump ? EX_jump_target : pc_plus_4;
-    // assign pc_next = pc_src ? EX_jump_target : pc_plus_4;
 
     // STALLING PC
     assign pc_next = stall ? pc : 
@@ -334,7 +316,6 @@ module main(
 
     instr_decode DECODE (
         .instr(IF_ID_instr),
-        //.instr(instr),
         .rs1(rs1),
         .rs2(rs2),
         .rd(rd),
@@ -363,33 +344,21 @@ module main(
         .r_data2(data2),
         .w_enable(MEM_WB_reg_write),
         .w_addr(MEM_WB_rd),
-        //.w_enable(reg_write),
-        //.w_addr(rd),
         .w_data(final_write_data)
     );
 
-    // assign alu_input2 = ID_EX_alu_src ? ID_EX_imm : ID_EX_data2;
-    // assign alu_input1 = ID_EX_auipc ? ID_EX_pc : ID_EX_data1;
     assign alu_input1_fwd = (forwardA == 2'b10) ? EX_MEM_alu_res :
                         (forwardA == 2'b01) ? write_back_data :
                         ID_EX_data1;
     assign alu_input1 = ID_EX_auipc ? ID_EX_pc : alu_input1_fwd;
-    //assign alu_input2 = alu_src ? imm : data2;
-    // assign alu_input1_fwd = ID_EX_auipc ? ID_EX_pc : 
-    //                         (forwardA == 2'b10) ? EX_MEM_alu_res :
-    //                         (forwardA == 2'b01) ? final_write_data :
-    //                         ID_EX_data1;  
 
-    // // // Operand 2
-    // wire [31:0] reg2_mux;
-    // assign reg2_mux = alu_src ? ID_EX_imm : ID_EX_data2; 
+    // Operand 2
     assign alu_input2_fwd = (forwardB == 2'b10) ? EX_MEM_alu_res :
                              (forwardB == 2'b01) ? write_back_data :
                              ID_EX_data2;
     assign alu_input2 = ID_EX_alu_src ? ID_EX_imm : alu_input2_fwd;  
 
     alu A (
-        //.in1(auipc ? pc : data1),
         .in1(alu_input1),
         .in2(alu_input2),
         .control(ID_EX_alu_control),
@@ -407,10 +376,6 @@ module main(
         .clk(clk),
         .addr(EX_MEM_alu_res),
         .write_data(EX_MEM_data2),
-        //.addr(alu_res),
-        //.write_data(data2),
-        //.mem_read(mem_read),
-        //.mem_write(mem_write),
         .mem_read(EX_MEM_mem_read),
         .mem_write(EX_MEM_mem_write),
         .mem_size(EX_MEM_mem_size),
@@ -418,9 +383,7 @@ module main(
         .read_data(mem_data)
     );
 
-    //assign write_back_data = mem_to_reg ? mem_data : alu_res;
     assign write_back_data = MEM_WB_mem_to_reg ? MEM_WB_mem_data : MEM_WB_alu_res;
-    //assign final_write_data = jump ? pc_plus_4 : write_back_data;
     assign final_write_data = MEM_WB_jump ? MEM_WB_pc_plus_4 : write_back_data;
 
 endmodule
