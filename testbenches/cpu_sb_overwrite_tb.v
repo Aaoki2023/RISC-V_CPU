@@ -2,6 +2,13 @@
 
 module cpu_tb_sb_overwrite;
 
+
+    /*
+    use program_byte_overwrite.hex
+
+    Checks that you can overwrite the lower byte of a halfword without corrupting the upper byte
+    */
+
     reg clk;
     reg rst;
 
@@ -19,7 +26,6 @@ module cpu_tb_sb_overwrite;
         .alu_res(alu_result)
     );
 
-    // Clock
     initial begin
         clk = 0;
         forever #5 clk = ~clk;
@@ -33,14 +39,13 @@ module cpu_tb_sb_overwrite;
         #20;
         rst = 0;
 
-        // Run program
         repeat (20) @(posedge clk);
 
         $display("\n========================================");
         $display("BYTE + HALFWORD OVERWRITE TEST");
         $display("========================================");
 
-        // LH → should reflect overwritten byte + sign extend
+        // LH overwritten byte + sign extend
         if (cpu.REGFILE.registers[4] !== 32'hFFFF80AA) begin
             $display("LH FAIL: x4 = 0x%h (expected FFFF80AA)", cpu.REGFILE.registers[4]);
             errors = errors + 1;
@@ -48,7 +53,7 @@ module cpu_tb_sb_overwrite;
             $display("LH PASS");
         end
 
-        // LHU → should reflect overwritten byte, zero extend
+        // LHU overwritten byte, zero extend
         if (cpu.REGFILE.registers[5] !== 32'h000080AA) begin
             $display("LHU FAIL: x5 = 0x%h (expected 000080AA)", cpu.REGFILE.registers[5]);
             errors = errors + 1;
@@ -56,11 +61,6 @@ module cpu_tb_sb_overwrite;
             $display("LHU PASS");
         end
 
-        $display("\n========================================");
-        $display("DEBUG: MEMORY CONTENT");
-        $display("========================================");
-
-        $display("mem[0] = 0x%h", cpu.DMEM.mem[0]);
 
         $display("\n========================================");
         $display("RESULT");

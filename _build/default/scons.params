@@ -1,12 +1,12 @@
-timestamp: "04122354296"
+timestamp: "23102852247"
 arch: ICE40
 fpga_info {
   fpga_id: "ice40up5k-sg48"
   part_num: "ICE40UP5K-SG48"
   size: "5k"
-  ice40 {
+  ice40_params {
     type: "up5k"
-    pack: "sg48"
+    package: "sg48"
   }
 }
 environment {
@@ -26,7 +26,7 @@ apio_env_params {
 }
 target {
   test {
-    testbench_path: "branch_tb.v"
+    testbench_path: "testbenches/store_load_tb.v"
     default_option: false
   }
 }

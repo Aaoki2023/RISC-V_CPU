@@ -2,6 +2,10 @@
 
 module register_file_tb;
 
+    /**
+    Test register file
+    */
+
     // Inputs
     reg clk;
     reg rst;
@@ -33,7 +37,7 @@ module register_file_tb;
         .w_data(write_data)
     );
     
-    // Clock generation - 10ns period (100MHz)
+    // Clock generation
     initial begin
         clk = 0;
         forever #5 clk = ~clk;
@@ -56,7 +60,7 @@ module register_file_tb;
         write_addr = 0;
         write_data = 0;
         
-        // Test 1: Reset
+        // Reset
         test_num = test_num + 1;
         rst = 1;
         #10;
@@ -74,14 +78,14 @@ module register_file_tb;
             failed_tests = failed_tests + 1;
         end
         
-        // Test 2: Write to register 1
+        // Write to register 1
         test_num = test_num + 1;
         write_enable = 1;
         write_addr = 5'd1;
         write_data = 32'hDEADBEEF;
-        #10; // Wait for clock edge
+        #10; 
         write_enable = 0;
-        #1;  // Small delay for combinational read
+        #1;  
         
         read_addr1 = 5'd1;
         #1;
@@ -93,7 +97,7 @@ module register_file_tb;
             failed_tests = failed_tests + 1;
         end
         
-        // Test 3: Write to register 15
+        // Write to register 15
         test_num = test_num + 1;
         write_enable = 1;
         write_addr = 5'd15;
@@ -112,7 +116,7 @@ module register_file_tb;
             failed_tests = failed_tests + 1;
         end
         
-        // Test 4: Read two registers simultaneously
+        // Read two registers simultaneously
         test_num = test_num + 1;
         read_addr1 = 5'd1;
         read_addr2 = 5'd15;
@@ -126,26 +130,8 @@ module register_file_tb;
             failed_tests = failed_tests + 1;
         end
         
-        // // Test 5: Register 0 hardwired to zero (write attempt)
-        // test_num = test_num + 1;
-        // write_enable = 1;
-        // write_addr = 5'd0;
-        // write_data = 32'hFFFFFFFF;
-        // #10;
-        // write_enable = 0;
-        // #1;
         
-        // read_addr1 = 5'd0;
-        // #1;
-        // assert(read_data1 == 32'd0) begin
-        //     $display("Test %0d PASSED: Register 0 hardwired to zero", test_num);
-        //     passed_tests = passed_tests + 1;
-        // end else begin
-        //     $display("Test %0d FAILED: r0 protection - Expected: 0, Got: %h", test_num, read_data1);
-        //     failed_tests = failed_tests + 1;
-        // end
-        
-        // Test 6: Write without write_enable
+        // Write without write_enable
         test_num = test_num + 1;
         write_enable = 0;  // Disabled
         write_addr = 5'd5;
@@ -163,14 +149,14 @@ module register_file_tb;
             failed_tests = failed_tests + 1;
         end
         
-        // Test 7: Overwrite a register
+        // Overwrite a register
         test_num = test_num + 1;
-        // First write
+        // write
         write_enable = 1;
         write_addr = 5'd7;
         write_data = 32'h11111111;
         #10;
-        // Second write (overwrite)
+        // overwrite
         write_data = 32'h22222222;
         #10;
         write_enable = 0;
@@ -186,15 +172,15 @@ module register_file_tb;
             failed_tests = failed_tests + 1;
         end
         
-        // Test 8: Write and read in same cycle (read should get new value)
+        // Write and read in same cycle (read should get new value)
         test_num = test_num + 1;
         write_enable = 1;
         write_addr = 5'd10;
         write_data = 32'hABCDEF00;
         read_addr1 = 5'd10;
-        #10;  // Clock edge writes
+        #10;  
         write_enable = 0;
-        #1;   // Combinational read happens
+        #1;   
         assert(read_data1 == 32'hABCDEF00) begin
             $display("Test %0d PASSED: Write-then-read same cycle", test_num);
             passed_tests = passed_tests + 1;
@@ -204,7 +190,7 @@ module register_file_tb;
             failed_tests = failed_tests + 1;
         end
         
-        // Test 9: Multiple sequential writes
+        // Multiple sequential writes
         test_num = test_num + 1;
         write_enable = 1;
         for (integer i = 1; i < 10; i = i + 1) begin

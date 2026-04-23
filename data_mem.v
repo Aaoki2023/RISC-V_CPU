@@ -10,7 +10,7 @@ module data_mem (
     output reg [31:0] read_data     
 );
 
-    reg [31:0] mem [0:1023]; // figure out highest frequency of implicit bram block ** good
+    reg [31:0] mem [0:1023]; 
     
     wire [9:0] word_addr = addr[11:2];
     wire [1:0] byte_offset = addr[1:0];
@@ -53,20 +53,6 @@ module data_mem (
                 end
                 
                 MEM_HALF: begin  // Load Halfword
-                    // case (byte_offset[1])
-                    //     1'b0: begin
-                    //         if (mem_unsigned)
-                    //             read_data = {16'b0, mem[word_addr][15:0]};    // Zero extend
-                    //         else
-                    //             read_data = {{16{mem[word_addr][15]}}, mem[word_addr][15:0]};  // Sign extend
-                    //     end
-                    //     1'b1: begin
-                    //         if (mem_unsigned)
-                    //             read_data = {16'b0, mem[word_addr][31:16]};
-                    //         else
-                    //             read_data = {{16{mem[word_addr][31]}}, mem[word_addr][31:16]};
-                    //     end
-                    // endcase
                     case (byte_offset)
                         2'b00: begin
                             read_data = mem_unsigned ?

@@ -2,6 +2,11 @@
 
 module alu_tb;
 
+    /**
+    Depreciated. TEST NO LONGER WORKS MAINLY BECAUSE I CHANGED A BUNCH OF THE CONTROL SIGNALS
+    FOR THE ALU. This is for an old version of the ALU that did not follow RISC-V standard behavior.
+    */
+
     // Inputs
     reg [31:0] operand_a;
     reg [31:0] operand_b;
