@@ -142,10 +142,8 @@ endmodule;
     reg ID_EX_mem_unsigned;
 
     // stalling logic
-    
-
     assign stall = ID_EX_mem_read &&
-               ((ID_EX_rd == rs1) || (ID_EX_rd == rs2)) &&
+               ((ID_EX_rd == rs1) || (ID_EX_rd == rs2 && !ID_EX_mem_write)) &&
                (ID_EX_rd != 0);
 
     always @(posedge clk or posedge rst) begin
@@ -227,6 +225,13 @@ endmodule;
     reg [1:0] EX_MEM_mem_size;
     reg EX_MEM_mem_unsigned;
 
+    // forwarding for mem to mem hazard
+    wire [31:0] store_data2_fwd;
+
+    assign store_data2_fwd = (EX_MEM_mem_read && (EX_MEM_rd != 0) && (EX_MEM_rd == ID_EX_rs2))
+                                    ? mem_data
+                                    : alu_input2_fwd;
+
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             EX_MEM_alu_res <= 0;
@@ -243,7 +248,8 @@ endmodule;
         end else begin
             EX_MEM_alu_res <= alu_res;
             // EX_MEM_data2 <= ID_EX_data2;
-            EX_MEM_data2 <= alu_input2_fwd;
+            // EX_MEM_data2 <= alu_input2_fwd;
+            EX_MEM_data2 <= store_data2_fwd;
             EX_MEM_rd <= ID_EX_rd;
             EX_MEM_reg_write <= ID_EX_reg_write;
             EX_MEM_mem_to_reg <= ID_EX_mem_to_reg;

@@ -161,8 +161,13 @@ module instr_memory (
         for (i = 0; i < 1024; i = i + 1)
             mem[i] = 32'h00000013;
 
-        $readmemh("program_hw_byte.hex", mem); // streamline your risc-v to hex so that way you know what your hex is doing
+        $readmemh("stalling.hex", mem); // streamline your risc-v to hex so that way you know what your hex is doing
         $display("mem[0] = %h", mem[0]);
     end
 
 endmodule
+
+// check to make sure you can read from two SBRAM in parallel for register file and data memory stages - yes
+// add the MUX for the last data hazard (at the very bottom of her ntoes)
+// make your tests more complete
+// try uploading to upduino, see if you can get your hands on an oscilliscope or multimeter
