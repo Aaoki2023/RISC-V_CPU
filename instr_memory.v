@@ -29,7 +29,7 @@ module instr_memory (
         for (i = 0; i < 1024; i = i + 1)
             mem[i] = 32'h00000013;
 
-        $readmemh("./testbenches/hex_files/program_branch.hex", mem); // streamline your risc-v to hex so that way you know what your hex is doing
+        $readmemh("./testbenches/hex_files/program_hw_byte.hex", mem); // streamline your risc-v to hex so that way you know what your hex is doing
         $display("mem[0] = %h", mem[0]);
     end
 
